@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcpgoogle"
-version = "0.1.0"
-description = "FastMCP server for Google services (Gmail, Calendar)"
+version = "0.2.0"
+description = "FastMCP server for Google services (Gmail, Calendar) with OMA Backend integration"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -14,6 +14,7 @@ dependencies = [
     "google-auth-httplib2>=0.2.0",
     "google-auth-oauthlib>=1.2.0",
     "python-dotenv>=1.0.1",
+    "httpx>=0.27.0",  # For OMA backend HTTP client
 ]
 
 [project.optional-dependencies]

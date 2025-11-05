@@ -5,7 +5,7 @@ from email.message import EmailMessage
 from pathlib import Path
 from typing import Any, Dict, List, Sequence
 from googleapiclient.discovery import build
-from mcp_hub.core import mcp
+from src.core import mcp
 from ..auth.google_auth import get_google_creds
 
 def _build_gmail_service():

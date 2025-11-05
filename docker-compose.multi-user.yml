@@ -1,0 +1,162 @@
+# Docker Compose for Multi-User MCP Google Hub
+# Each user gets their own isolated container
+
+version: '3.8'
+
+services:
+  # Alice's MCP Hub instance
+  mcpgoogle-alice:
+    build: .
+    container_name: mcpgoogle-alice
+    restart: unless-stopped
+    environment:
+      # OMA Backend configuration
+      AUTH_MODE: oma_backend
+      OMA_BACKEND_URL: https://rndaibot.ru/api/v1
+      OMA_VERIFY_SSL: "true"
+
+      # User credentials (JWT token obtained automatically at startup)
+      MCP_USERNAME: ${ALICE_USERNAME}  # Alice's username
+      MCP_PASSWORD: ${ALICE_PASSWORD}  # Alice's password
+
+      # Google OAuth credentials (shared across all users)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
+    ports:
+      - "3001:8000"  # Alice's port
+
+    networks:
+      - mcpgoogle-network
+
+    labels:
+      - "com.mcpgoogle.user=alice"
+      - "com.mcpgoogle.email=alice@example.com"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Bob's MCP Hub instance
+  mcpgoogle-bob:
+    build: .
+    container_name: mcpgoogle-bob
+    restart: unless-stopped
+    environment:
+      AUTH_MODE: oma_backend
+      OMA_BACKEND_URL: https://rndaibot.ru/api/v1
+      OMA_VERIFY_SSL: "true"
+      MCP_USERNAME: ${BOB_USERNAME}
+      MCP_PASSWORD: ${BOB_PASSWORD}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
+    ports:
+      - "3002:8000"  # Bob's port
+
+    networks:
+      - mcpgoogle-network
+
+    labels:
+      - "com.mcpgoogle.user=bob"
+      - "com.mcpgoogle.email=bob@example.com"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Carol's MCP Hub instance
+  mcpgoogle-carol:
+    build: .
+    container_name: mcpgoogle-carol
+    restart: unless-stopped
+    environment:
+      AUTH_MODE: oma_backend
+      OMA_BACKEND_URL: https://rndaibot.ru/api/v1
+      OMA_VERIFY_SSL: "true"
+      MCP_USERNAME: ${CAROL_USERNAME}
+      MCP_PASSWORD: ${CAROL_PASSWORD}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
+    ports:
+      - "3003:8000"  # Carol's port
+
+    networks:
+      - mcpgoogle-network
+
+    labels:
+      - "com.mcpgoogle.user=carol"
+      - "com.mcpgoogle.email=carol@example.com"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Dave's MCP Hub instance
+  mcpgoogle-dave:
+    build: .
+    container_name: mcpgoogle-dave
+    restart: unless-stopped
+    environment:
+      AUTH_MODE: oma_backend
+      OMA_BACKEND_URL: https://rndaibot.ru/api/v1
+      OMA_ACCESS_TOKEN: ${DAVE_OMA_TOKEN}  # Dave's JWT token
+      OMA_VERIFY_SSL: "true"
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
+    ports:
+      - "3004:8000"  # Dave's port
+
+    networks:
+      - mcpgoogle-network
+
+    labels:
+      - "com.mcpgoogle.user=dave"
+      - "com.mcpgoogle.email=dave@example.com"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Eve's MCP Hub instance
+  mcpgoogle-eve:
+    build: .
+    container_name: mcpgoogle-eve
+    restart: unless-stopped
+    environment:
+      AUTH_MODE: oma_backend
+      OMA_BACKEND_URL: https://rndaibot.ru/api/v1
+      OMA_ACCESS_TOKEN: ${EVE_OMA_TOKEN}  # Eve's JWT token
+      OMA_VERIFY_SSL: "true"
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+
+    ports:
+      - "3005:8000"  # Eve's port
+
+    networks:
+      - mcpgoogle-network
+
+    labels:
+      - "com.mcpgoogle.user=eve"
+      - "com.mcpgoogle.email=eve@example.com"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  mcpgoogle-network:
+    driver: bridge
