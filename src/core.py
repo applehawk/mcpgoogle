@@ -1,12 +1,6 @@
 from mcp.server.fastmcp import FastMCP
-from starlette.responses import JSONResponse
 
-# Initialize FastMCP with SSE transport
+# Initialize FastMCP with HTTP transport
 mcp = FastMCP(
-    name="MCPGoogle",
-    transport="sse"  # Enable Server-Sent Events transport
+    name="MCPGoogle"
 )
-
-@mcp.custom_route("/health", methods=["GET"])
-async def health_check(request):
-    return JSONResponse({"status": "healthy", "service": "mcp-server"})
