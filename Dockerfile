@@ -28,6 +28,7 @@ RUN pip install --no-cache-dir -e .
 # Environment variables will be passed at runtime
 ENV AUTH_MODE=oma_backend
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
 # Expose port (will be mapped differently for each user)
 EXPOSE 8000
