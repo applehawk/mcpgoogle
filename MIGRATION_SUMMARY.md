@@ -228,7 +228,7 @@ curl https://rndaibot.ru/apib/v1/google/credentials \
 
 # 3. Test MCP Hub
 python -c "
-from mcp_hub.auth.google_auth import get_google_creds
+from src.auth.google_auth import get_google_creds
 creds = get_google_creds()
 print(f'Token: {creds.token[:20]}...')
 print(f'Valid: {creds.valid}')

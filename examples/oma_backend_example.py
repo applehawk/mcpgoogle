@@ -17,7 +17,7 @@ os.environ["AUTH_MODE"] = "oma_backend"
 
 def example_gmail_send():
     """Example: Send email using OMA Backend credentials"""
-    from mcp_hub.tools.gmail_tool import gmail_send_message
+    from src.tools.gmail_tool import gmail_send_message
 
     print("=" * 60)
     print("Example: Send Email via OMA Backend")
@@ -37,7 +37,7 @@ def example_gmail_send():
 
 def example_gmail_list():
     """Example: List unread emails"""
-    from mcp_hub.tools.gmail_tool import gmail_list_unread
+    from src.tools.gmail_tool import gmail_list_unread
 
     print("=" * 60)
     print("Example: List Unread Emails")
@@ -55,7 +55,7 @@ def example_gmail_list():
 
 def example_calendar_upcoming():
     """Example: Get upcoming calendar events"""
-    from mcp_hub.tools.calendar_tool import calendar_upcoming
+    from src.tools.calendar_tool import calendar_upcoming
 
     print("=" * 60)
     print("Example: Upcoming Calendar Events")
@@ -73,7 +73,7 @@ def example_calendar_upcoming():
 
 def example_check_oma_status():
     """Example: Check OMA Backend connection status"""
-    from mcp_hub.auth.oma_client import get_oma_client
+    from src.auth.oma_client import get_oma_client
 
     print("=" * 60)
     print("Example: Check OMA Backend Status")
@@ -104,7 +104,7 @@ def example_check_oma_status():
 
 def example_get_credentials():
     """Example: Direct credential access"""
-    from mcp_hub.auth.google_auth import get_google_creds
+    from src.auth.google_auth import get_google_creds
 
     print("=" * 60)
     print("Example: Get Google Credentials from OMA Backend")
@@ -135,7 +135,7 @@ def example_get_credentials():
 
 def example_direct_api_call():
     """Example: Using credentials with Google API client directly"""
-    from mcp_hub.auth.google_auth import get_google_creds
+    from src.auth.google_auth import get_google_creds
     from googleapiclient.discovery import build
 
     print("=" * 60)

@@ -330,7 +330,7 @@ curl https://rndaibot.ru/api/v1/google/credentials \
 
 ```python
 # test_oma_integration.py
-from mcp_hub.auth.google_auth import get_google_creds
+from src.auth.google_auth import get_google_creds
 from googleapiclient.discovery import build
 
 # Get credentials from OMA Backend
@@ -413,7 +413,7 @@ echo "OMA_ACCESS_TOKEN=$TOKEN" >> .env
 # - secrets/credentials.json (from Google Cloud)
 # - data/token.json (generated after OAuth)
 
-from mcp_hub.auth.google_auth import get_google_creds
+from src.auth.google_auth import get_google_creds
 creds = get_google_creds()  # Opens browser for OAuth
 ```
 
@@ -426,7 +426,7 @@ OMA_ACCESS_TOKEN=your_jwt_token
 ```
 
 ```python
-from mcp_hub.auth.google_auth import get_google_creds
+from src.auth.google_auth import get_google_creds
 creds = get_google_creds()  # Fetches from OMA Backend
 ```
 

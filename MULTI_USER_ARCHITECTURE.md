@@ -272,7 +272,7 @@ MCP Hub can serve **different users simultaneously** by using their individual J
 import os
 os.environ["OMA_ACCESS_TOKEN"] = "JWT-ALICE-xxx..."
 
-from mcp_hub.auth.google_auth import get_google_creds
+from src.auth.google_auth import get_google_creds
 creds_alice = get_google_creds()  # Gets Alice's Google credentials
 
 # Gmail API call will access Alice's Gmail
@@ -287,7 +287,7 @@ messages = gmail.users().messages().list(userId="me").execute()
 import os
 os.environ["OMA_ACCESS_TOKEN"] = "JWT-BOB-yyy..."
 
-from mcp_hub.auth.google_auth import get_google_creds
+from src.auth.google_auth import get_google_creds
 creds_bob = get_google_creds()  # Gets Bob's Google credentials
 
 # Gmail API call will access Bob's Gmail

@@ -177,7 +177,7 @@ curl http://localhost:3002/health
 ```bash
 # Alice's container on port 3001
 docker exec -it mcpgoogle-alice python -c "
-from mcp_hub.tools.gmail_tool import gmail_send_message
+from src.tools.gmail_tool import gmail_send_message
 gmail_send_message(
     to='recipient@example.com',
     subject='Hello from Alice',
@@ -191,7 +191,7 @@ gmail_send_message(
 ```bash
 # Bob's container on port 3002
 docker exec -it mcpgoogle-bob python -c "
-from mcp_hub.tools.calendar_tool import calendar_upcoming
+from src.tools.calendar_tool import calendar_upcoming
 events = calendar_upcoming(max_results=5)
 print(f'Bob has {len(events)} upcoming events')
 "

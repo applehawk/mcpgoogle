@@ -1,4 +1,4 @@
-# mcp_hub/server.py
+# src/server.py
 from src.core import mcp  # instancia compartida
 
 # Importa las tools; al importarse, sus @mcp.tool() ya quedan registradas

@@ -180,7 +180,7 @@ def get_google_creds_from_oma() -> Credentials:
         google.oauth2.credentials.Credentials object
 
     Example:
-        >>> from mcp_hub.auth.oma_client import get_google_creds_from_oma
+        >>> from src.auth.oma_client import get_google_creds_from_oma
         >>> creds = get_google_creds_from_oma()
         >>> from googleapiclient.discovery import build
         >>> gmail = build("gmail", "v1", credentials=creds)
