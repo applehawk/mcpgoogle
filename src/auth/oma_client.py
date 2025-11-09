@@ -23,6 +23,7 @@ class OMAAuthClient:
         self,
         base_url: Optional[str] = None,
         access_token: Optional[str] = None,
+        refresh_token: Optional[str] = None,
         verify_ssl: bool = True
     ):
         """
@@ -31,10 +32,12 @@ class OMAAuthClient:
         Args:
             base_url: OMA backend base URL (default from env OMA_BACKEND_URL)
             access_token: User's access token for OMA backend (default from env OMA_ACCESS_TOKEN)
+            refresh_token: User's refresh token for auto-refresh (default from env MCP_REFRESH_TOKEN)
             verify_ssl: Whether to verify SSL certificates (default True, set False for dev)
         """
         self.base_url = (base_url or os.getenv("OMA_BACKEND_URL", "https://rndaibot.ru/apib/v1")).rstrip("/")
         self.access_token = access_token or os.getenv("OMA_ACCESS_TOKEN")
+        self.refresh_token = refresh_token or os.getenv("MCP_REFRESH_TOKEN")
         self.verify_ssl = verify_ssl
 
         if not self.access_token:
@@ -50,9 +53,52 @@ class OMAAuthClient:
             "Content-Type": "application/json"
         }
 
+    def _refresh_access_token(self) -> bool:
+        """
+        Refresh access token using refresh token
+
+        Returns:
+            True if refresh succeeded, False otherwise
+        """
+        if not self.refresh_token:
+            print("[OMAAuthClient] No refresh token available, cannot refresh access token")
+            return False
+
+        try:
+            print("[OMAAuthClient] Refreshing access token using refresh token...")
+            with httpx.Client(verify=self.verify_ssl) as client:
+                response = client.post(
+                    f"{self.base_url}/auth/refresh",
+                    json={"refresh_token": self.refresh_token},
+                    headers={"Content-Type": "application/json"},
+                    timeout=30.0
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    new_access_token = data.get("access_token")
+                    if new_access_token:
+                        self.access_token = new_access_token
+                        # Update environment variable for other parts of code
+                        os.environ["OMA_ACCESS_TOKEN"] = new_access_token
+                        print(f"[OMAAuthClient] Access token refreshed successfully: {new_access_token[:20]}...")
+                        return True
+                    else:
+                        print("[OMAAuthClient] No access_token in refresh response")
+                        return False
+                else:
+                    print(f"[OMAAuthClient] Failed to refresh token: HTTP {response.status_code}")
+                    print(f"[OMAAuthClient] Response: {response.text}")
+                    return False
+
+        except Exception as e:
+            print(f"[OMAAuthClient] Error refreshing access token: {e}")
+            return False
+
     async def get_google_credentials(self) -> Credentials:
         """
         Fetch Google OAuth credentials from OMA backend
+        Automatically refreshes access token if 401 Unauthorized is received
 
         Returns:
             google.oauth2.credentials.Credentials object ready for use with Google APIs
@@ -67,6 +113,23 @@ class OMAAuthClient:
                 headers=self._get_headers(),
                 timeout=30.0
             )
+
+            # Handle 401 Unauthorized - try to refresh token
+            if response.status_code == 401:
+                print("[OMAAuthClient] Received 401 Unauthorized, attempting to refresh access token...")
+                if self._refresh_access_token():
+                    print("[OMAAuthClient] Token refreshed, retrying request...")
+                    # Retry with new token
+                    response = await client.get(
+                        f"{self.base_url}/google/credentials",
+                        headers=self._get_headers(),
+                        timeout=30.0
+                    )
+                else:
+                    raise ValueError(
+                        "Access token expired and refresh failed. "
+                        "Please re-authenticate or check refresh token."
+                    )
 
             if response.status_code == 404:
                 raise ValueError(
@@ -98,6 +161,7 @@ class OMAAuthClient:
     def get_google_credentials_sync(self) -> Credentials:
         """
         Synchronous version of get_google_credentials
+        Automatically refreshes access token if 401 Unauthorized is received
 
         Returns:
             google.oauth2.credentials.Credentials object ready for use with Google APIs
@@ -108,6 +172,23 @@ class OMAAuthClient:
                 headers=self._get_headers(),
                 timeout=30.0
             )
+
+            # Handle 401 Unauthorized - try to refresh token
+            if response.status_code == 401:
+                print("[OMAAuthClient] Received 401 Unauthorized, attempting to refresh access token...")
+                if self._refresh_access_token():
+                    print("[OMAAuthClient] Token refreshed, retrying request...")
+                    # Retry with new token
+                    response = client.get(
+                        f"{self.base_url}/google/credentials",
+                        headers=self._get_headers(),
+                        timeout=30.0
+                    )
+                else:
+                    raise ValueError(
+                        "Access token expired and refresh failed. "
+                        "Please re-authenticate or check refresh token."
+                    )
 
             if response.status_code == 404:
                 raise ValueError(

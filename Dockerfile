@@ -38,7 +38,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Use entrypoint to obtain JWT token automatically
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Run MCP Hub server
-CMD ["fastmcp", "run", "src/server.py"]
+# Use --host to bind to all interfaces for Docker port mapping
+CMD ["fastmcp", "run", "src/server.py", "--host", "0.0.0.0", "--port", "8000", "--transport", "http"]
