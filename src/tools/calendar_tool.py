@@ -19,7 +19,7 @@ def _normalize_datetime(dt: str | datetime, default_tz: str = "UTC") -> Dict[str
         return {"date": dt}
     return {"dateTime": dt, "timeZone": default_tz}
 
-@mcp.tool(name="calendar_upcoming", description="Lista proximos eventos del calendario principal.")
+@mcp.tool(name="calendar_upcoming", description="List upcoming events from the primary calendar.")
 def calendar_upcoming(max_events: int = 10) -> List[Dict[str, Any]]:
     service = _build_calendar_service()
     now = datetime.now(timezone.utc).isoformat()
@@ -44,7 +44,7 @@ def calendar_upcoming(max_events: int = 10) -> List[Dict[str, Any]]:
         )
     return out
 
-@mcp.tool(name="calendar_create_event", description="Crea un evento en el calendario primario.")
+@mcp.tool(name="calendar_create_event", description="Create an event in the primary calendar.")
 def calendar_create_event(
     summary: str,
     start: str,
@@ -74,7 +74,7 @@ def calendar_create_event(
     created = service.events().insert(calendarId="primary", body=body, sendUpdates="all").execute()
     return {"id": created.get("id"), "htmlLink": created.get("htmlLink")}
 
-@mcp.tool(name="calendar_update_event", description="Actualiza campos de un evento existente.")
+@mcp.tool(name="calendar_update_event", description="Update fields of an existing event.")
 def calendar_update_event(
     event_id: str,
     summary: str | None = None,
@@ -112,7 +112,7 @@ def calendar_update_event(
     ).execute()
     return {"id": updated.get("id"), "htmlLink": updated.get("htmlLink")}
 
-@mcp.tool(name="calendar_delete_event", description="Elimina un evento del calendario principal.")
+@mcp.tool(name="calendar_delete_event", description="Delete an event from the primary calendar.")
 def calendar_delete_event(event_id: str, send_updates: bool = False) -> Dict[str, Any]:
     service = _build_calendar_service()
     service.events().delete(
@@ -122,7 +122,7 @@ def calendar_delete_event(event_id: str, send_updates: bool = False) -> Dict[str
     ).execute()
     return {"status": "deleted", "id": event_id}
 
-@mcp.tool(name="calendar_export_event", description="Exporta un evento como archivo .ics almacenado localmente.")
+@mcp.tool(name="calendar_export_event", description="Export an event as a locally stored .ics file.")
 def calendar_export_event(event_id: str, destination_path: str) -> Dict[str, Any]:
     service = _build_calendar_service()
     event = service.events().get(calendarId="primary", eventId=event_id).execute()

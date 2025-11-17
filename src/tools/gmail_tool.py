@@ -38,9 +38,9 @@ def _extract_text(payload: Dict[str, Any]) -> str:
             return text
     return ""
 
-@mcp.tool(name="gmail_list_unread", description="Lista correos no leidos (INBOX).")
+@mcp.tool(name="gmail_list_unread", description="List unread emails (INBOX).")
 def gmail_list_unread(max_results: int = 10) -> List[Dict[str, Any]]:
-    """Retorna remitente, asunto, fecha y el id del mensaje."""
+    """Returns sender, subject, date and message id."""
     service = _build_gmail_service()
     resp = service.users().messages().list(
         userId="me",
@@ -50,7 +50,7 @@ def gmail_list_unread(max_results: int = 10) -> List[Dict[str, Any]]:
     messages = resp.get("messages", [])
     return [_summarize_message(service, m["id"]) for m in messages]
 
-@mcp.tool(name="gmail_search_messages", description="Busca correos usando la sintaxis de Gmail.")
+@mcp.tool(name="gmail_search_messages", description="Search emails using Gmail query syntax.")
 def gmail_search_messages(query_text: str, max_results: int = 10) -> List[Dict[str, Any]]:
     service = _build_gmail_service()
     resp = service.users().messages().list(
@@ -61,7 +61,7 @@ def gmail_search_messages(query_text: str, max_results: int = 10) -> List[Dict[s
     messages = resp.get("messages", [])
     return [_summarize_message(service, m["id"]) for m in messages]
 
-@mcp.tool(name="gmail_get_message", description="Obtiene el cuerpo (texto) de un correo por id.")
+@mcp.tool(name="gmail_get_message", description="Get the body (text) of an email by id.")
 def gmail_get_message(message_id: str) -> Dict[str, Any]:
     service = _build_gmail_service()
     msg = service.users().messages().get(userId="me", id=message_id, format="full").execute()
@@ -69,14 +69,14 @@ def gmail_get_message(message_id: str) -> Dict[str, Any]:
     body_text = _extract_text(payload)
     return {"snippet": msg.get("snippet"), "text": body_text[:10000]}
 
-@mcp.tool(name="gmail_modify_message", description="Anade o quita labels en un mensaje de Gmail.")
+@mcp.tool(name="gmail_modify_message", description="Add or remove labels on a Gmail message.")
 def gmail_modify_message(
     message_id: str,
     add_labels: Sequence[str] | None = None,
     remove_labels: Sequence[str] | None = None,
 ) -> Dict[str, Any]:
     if not add_labels and not remove_labels:
-        raise ValueError("Debes indicar add_labels o remove_labels.")
+        raise ValueError("Must specify add_labels or remove_labels.")
     service = _build_gmail_service()
     body: Dict[str, Any] = {}
     if add_labels:
@@ -86,14 +86,14 @@ def gmail_modify_message(
     resp = service.users().messages().modify(userId="me", id=message_id, body=body).execute()
     return {"id": resp.get("id"), "labelIds": resp.get("labelIds", [])}
 
-@mcp.tool(name="gmail_mark_as_read", description="Marca un correo como leido y opcionalmente lo archiva.")
+@mcp.tool(name="gmail_mark_as_read", description="Mark an email as read and optionally archive it.")
 def gmail_mark_as_read(message_id: str, archive: bool = False) -> Dict[str, Any]:
     remove = ["UNREAD"]
     if archive:
         remove.append("INBOX")
     return gmail_modify_message(message_id=message_id, remove_labels=remove)
 
-@mcp.tool(name="gmail_send_message", description="Envia un correo simple con opcionales CC/BCC y adjuntos.")
+@mcp.tool(name="gmail_send_message", description="Send a simple email with optional CC/BCC and attachments.")
 def gmail_send_message(
     to: str,
     subject: str,
@@ -120,7 +120,7 @@ def gmail_send_message(
     for attachment in attachments or []:
         path = Path(attachment).expanduser()
         if not path.exists() or not path.is_file():
-            raise FileNotFoundError(f"No encuentro el adjunto: {path}")
+            raise FileNotFoundError(f"Attachment not found: {path}")
         mime_type, _ = mimetypes.guess_type(str(path))
         maintype, subtype = (mime_type or "application/octet-stream").split("/", 1)
         message.add_attachment(
