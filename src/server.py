@@ -1,8 +1,23 @@
 # src/server.py
-from src.core import mcp  # instancia compartida
-from starlette.responses import JSONResponse
+"""
+MCP Google Hub Server
 
-# Importa las tools; al importarse, sus @mcp.tool() ya quedan registradas
+FastMCP server with Google services integration (Gmail, Calendar).
+Fully compatible with OpenAI Agents hostedMcpTool.
+
+Endpoints:
+- /mcp/ - MCP protocol endpoint (JSON-RPC 2.0)
+  - tools/list - List available tools
+  - tools/call - Execute tool with arguments
+- /health - Health check endpoint
+"""
+
+from src.core import mcp  # Shared FastMCP instance
+from src import config
+from starlette.responses import JSONResponse
+from starlette.middleware.cors import CORSMiddleware
+
+# Import tools; their @mcp.tool() decorators register them automatically
 from src.tools.gmail_tool import (
     gmail_get_message,
     gmail_list_unread,
@@ -14,9 +29,41 @@ from src.tools.gmail_tool import (
 
 from src.tools.calendar_tool import calendar_upcoming
 
+
 @mcp.custom_route("/health", methods=["GET"])
 async def health_check(request):
-    return JSONResponse({"status": "healthy", "service": "mcp-server"})
+    """Health check endpoint for monitoring"""
+    return JSONResponse({
+        "status": "healthy",
+        "service": "mcp-google-hub",
+        "auth_enabled": config.MCP_AUTH_TOKEN is not None,
+        "transport": config.MCP_TRANSPORT
+    })
+
+
+# Configure CORS for OpenAI and other clients
+if hasattr(mcp, 'app'):
+    origins = config.MCP_CORS_ORIGINS.split(",") if config.MCP_CORS_ORIGINS != "*" else ["*"]
+    mcp.app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
+
 
 if __name__ == "__main__":
-    mcp.run(transport="http", host="0.0.0.0", port=8000)
+    print(f"Starting MCP Google Hub server...")
+    print(f"Transport: {config.MCP_TRANSPORT}")
+    print(f"Host: {config.MCP_HOST}:{config.MCP_PORT}")
+    print(f"MCP Endpoint: http://{config.MCP_HOST}:{config.MCP_PORT}/mcp/")
+    print(f"Auth: {'Enabled' if config.MCP_AUTH_TOKEN else 'Disabled (dev mode)'}")
+    print(f"CORS Origins: {config.MCP_CORS_ORIGINS}")
+
+    mcp.run(
+        transport=config.MCP_TRANSPORT,
+        host=config.MCP_HOST,
+        port=config.MCP_PORT
+    )
