@@ -16,6 +16,8 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "httpx>=0.27.0", # For OMA backend HTTP client
     "starlette>=0.49.0",
+    "python-json-logger>=4.0.0",
+    "logging>=0.4.9.6",
 ]
 
 [project.optional-dependencies]

@@ -128,7 +128,7 @@ def validate_config() -> None:
 # MCP Server Authentication
 # Set to enable Bearer token authentication for /mcp endpoint
 # Leave empty to disable authentication (development only)
-MCP_AUTH_TOKEN = os.getenv("MCP_AUTH_TOKEN")
+# MCP_AUTH_TOKEN = os.getenv("MCP_AUTH_TOKEN")
 
 # MCP Server CORS Origins (comma-separated)
 # Default "*" allows all origins (use specific domains in production)
@@ -139,7 +139,7 @@ MCP_HOST = os.getenv("MCP_HOST", "0.0.0.0")
 MCP_PORT = int(os.getenv("MCP_PORT", "8000"))
 
 # MCP Transport type: "http" or "streamable-http" (recommended for OpenAI)
-MCP_TRANSPORT = os.getenv("MCP_TRANSPORT", "http")
+MCP_TRANSPORT = os.getenv("MCP_TRANSPORT", "sse")
 
 
 # ============================================================================

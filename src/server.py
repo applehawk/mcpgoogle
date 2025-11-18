@@ -11,8 +11,9 @@ Endpoints:
   - tools/call - Execute tool with arguments
 - /health - Health check endpoint
 """
-
+import logging
 from src.core import mcp  # Shared FastMCP instance
+from src.core import setup_logging
 from src import config
 from starlette.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
@@ -36,22 +37,30 @@ async def health_check(request):
     return JSONResponse({
         "status": "healthy",
         "service": "mcp-google-hub",
-        "auth_enabled": config.MCP_AUTH_TOKEN is not None,
+        # "auth_enabled": config.MCP_AUTH_TOKEN is not None,
         "transport": config.MCP_TRANSPORT
     })
 
 
-# Configure CORS for OpenAI and other clients
-if hasattr(mcp, 'app'):
-    origins = config.MCP_CORS_ORIGINS.split(",") if config.MCP_CORS_ORIGINS != "*" else ["*"]
-    mcp.app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "OPTIONS"],
-        allow_headers=["*"],
-        expose_headers=["*"],
-    )
+# from src.middleware.mcplogging import MCPLoggingMiddleware
+# # Configure CORS for OpenAI and other clients
+# try:
+#     if hasattr(mcp, 'app'):
+#         origins = config.MCP_CORS_ORIGINS.split(",") if config.MCP_CORS_ORIGINS != "*" else ["*"]
+#         mcp.app.add_middleware(
+#             CORSMiddleware,
+#             allow_origins=origins,
+#             allow_credentials=True,
+#             allow_methods=["GET", "POST", "OPTIONS"],
+#             allow_headers=["*"],
+#             expose_headers=["*"],
+#         )
+#         mcp.app.add_middleware(MCPLoggingMiddleware)
+#         logging.getLogger("mcp.request").info("Attached MCPLoggingMiddleware to mcp.app")
+#     else:
+#         logging.getLogger("mcp.request").warning("mcp.app not exposed — cannot attach middleware programmatically")
+# except Exception as e:
+#     logging.getLogger("mcp.request").exception("Failed to attach middleware: %s", e)
 
 
 if __name__ == "__main__":
@@ -59,11 +68,12 @@ if __name__ == "__main__":
     print(f"Transport: {config.MCP_TRANSPORT}")
     print(f"Host: {config.MCP_HOST}:{config.MCP_PORT}")
     print(f"MCP Endpoint: http://{config.MCP_HOST}:{config.MCP_PORT}/mcp/")
-    print(f"Auth: {'Enabled' if config.MCP_AUTH_TOKEN else 'Disabled (dev mode)'}")
+    # print(f"Auth: {'Enabled' if config.MCP_AUTH_TOKEN else 'Disabled (dev mode)'}")
     print(f"CORS Origins: {config.MCP_CORS_ORIGINS}")
+    
+    setup_logging()
 
     mcp.run(
         transport=config.MCP_TRANSPORT,
-        host=config.MCP_HOST,
         port=config.MCP_PORT
     )
