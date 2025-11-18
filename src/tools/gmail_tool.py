@@ -50,8 +50,20 @@ def gmail_list_unread(max_results: int = 10) -> List[Dict[str, Any]]:
     messages = resp.get("messages", [])
     return [_summarize_message(service, m["id"]) for m in messages]
 
-@mcp.tool(name="gmail_search_messages", description="Search emails using Gmail query syntax.")
+@mcp.tool(
+    name="gmail_search_messages",
+    description="Search emails using Gmail query syntax. Returns message metadata (id, from, subject, date). Use 'subject:keyword' to search in subject, 'from:email' to filter by sender, or just text to search everywhere."
+)
 def gmail_search_messages(query_text: str, max_results: int = 10) -> List[Dict[str, Any]]:
+    """
+    Search emails using Gmail query syntax.
+    Examples:
+    - "subject:invoice" - search for "invoice" in subject
+    - "from:noreply@example.com" - emails from specific sender
+    - "is:unread" - unread emails
+    - "has:attachment" - emails with attachments
+    - "newer_than:7d" - emails from last 7 days
+    """
     service = _build_gmail_service()
     resp = service.users().messages().list(
         userId="me",
@@ -61,13 +73,107 @@ def gmail_search_messages(query_text: str, max_results: int = 10) -> List[Dict[s
     messages = resp.get("messages", [])
     return [_summarize_message(service, m["id"]) for m in messages]
 
-@mcp.tool(name="gmail_get_message", description="Get the body (text) of an email by id.")
+@mcp.tool(name="gmail_get_message", description="Get the body (text) of a single email by id.")
 def gmail_get_message(message_id: str) -> Dict[str, Any]:
+    """Get full content of a single email message."""
     service = _build_gmail_service()
     msg = service.users().messages().get(userId="me", id=message_id, format="full").execute()
     payload = msg.get("payload", {})
+    headers = {h["name"]: h["value"] for h in payload.get("headers", [])}
     body_text = _extract_text(payload)
-    return {"snippet": msg.get("snippet"), "text": body_text[:10000]}
+    return {
+        "id": message_id,
+        "from": headers.get("From"),
+        "to": headers.get("To"),
+        "subject": headers.get("Subject"),
+        "date": headers.get("Date"),
+        "snippet": msg.get("snippet"),
+        "text": body_text[:10000],
+    }
+
+@mcp.tool(
+    name="gmail_get_messages_bulk",
+    description="Get full content of multiple emails by their IDs (up to 50 messages). Returns from, to, subject, date, snippet and full text for each message."
+)
+def gmail_get_messages_bulk(message_ids: List[str], max_messages: int = 50) -> List[Dict[str, Any]]:
+    """
+    Get full content of multiple email messages in bulk.
+
+    Args:
+        message_ids: List of message IDs to retrieve
+        max_messages: Maximum number of messages to retrieve (default 50)
+
+    Returns:
+        List of message objects with full content
+    """
+    service = _build_gmail_service()
+
+    # Limit to max_messages
+    ids_to_fetch = message_ids[:max_messages]
+
+    results = []
+    for msg_id in ids_to_fetch:
+        try:
+            msg = service.users().messages().get(userId="me", id=msg_id, format="full").execute()
+            payload = msg.get("payload", {})
+            headers = {h["name"]: h["value"] for h in payload.get("headers", [])}
+            body_text = _extract_text(payload)
+
+            results.append({
+                "id": msg_id,
+                "from": headers.get("From"),
+                "to": headers.get("To"),
+                "subject": headers.get("Subject"),
+                "date": headers.get("Date"),
+                "snippet": msg.get("snippet"),
+                "text": body_text[:10000],  # Limit each message to 10k chars
+            })
+        except Exception as e:
+            # Include error info but continue processing other messages
+            results.append({
+                "id": msg_id,
+                "error": str(e),
+            })
+
+    return results
+
+@mcp.tool(
+    name="gmail_search_and_read",
+    description="Search for emails using Gmail query syntax and immediately retrieve their full content (up to 50 messages). Combines search and bulk read in one operation."
+)
+def gmail_search_and_read(query_text: str, max_results: int = 10) -> List[Dict[str, Any]]:
+    """
+    Search for emails and immediately get their full content.
+    This is more efficient than calling search + get_messages_bulk separately.
+
+    Args:
+        query_text: Gmail search query (e.g., "subject:invoice", "from:example.com")
+        max_results: Maximum number of messages to retrieve (max 50)
+
+    Returns:
+        List of messages with full content
+    """
+    # Limit to 50 messages max
+    max_results = min(max_results, 50)
+
+    service = _build_gmail_service()
+
+    # Search for messages
+    resp = service.users().messages().list(
+        userId="me",
+        q=query_text,
+        maxResults=max_results,
+    ).execute()
+
+    messages = resp.get("messages", [])
+    if not messages:
+        return []
+
+    # Get message IDs
+    message_ids = [m["id"] for m in messages]
+
+    # Fetch full content for all messages
+    return gmail_get_messages_bulk(message_ids, max_messages=max_results)
 
 @mcp.tool(name="gmail_modify_message", description="Add or remove labels on a Gmail message.")
 def gmail_modify_message(

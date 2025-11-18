@@ -1,4 +1,4 @@
-.PHONY: help find rm stop start logs build run-local test-health
+.PHONY: help find rm stop start logs build run-local test-health find-all stop-all rm-all
 
 # Extract username from command line arguments
 # Usage: make find mr.vasilenko.vlad
@@ -21,6 +21,11 @@ help:
 	@echo "  make stop <username>        - Stop user's container"
 	@echo "  make start <username>       - Start user's container"
 	@echo "  make logs <username>        - View user's container logs"
+	@echo ""
+	@echo "Bulk container management:"
+	@echo "  make find-all               - Find all mcpgoogle-* containers"
+	@echo "  make stop-all               - Stop all mcpgoogle-* containers"
+	@echo "  make rm-all                 - Stop and remove all mcpgoogle-* containers"
 	@echo ""
 	@echo "Examples:"
 	@echo "  make find mr.vasilenko.vlad"
@@ -104,3 +109,33 @@ run-local:
 test-health:
 	@echo "🏥 Testing health endpoint..."
 	@curl -s http://localhost:8000/health | python -m json.tool || echo "❌ Server not responding"
+
+# Find all mcpgoogle-* containers
+find-all:
+	@echo "🔍 Searching for all mcpgoogle-* containers..."
+	@docker ps -a --filter "name=mcpgoogle-" --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}" || echo "No containers found"
+	@echo ""
+	@CONTAINER_COUNT=$$(docker ps -a --filter "name=mcpgoogle-" --format "{{.Names}}" | wc -l); \
+	echo "Total: $$CONTAINER_COUNT container(s)"
+
+# Stop all mcpgoogle-* containers
+stop-all:
+	@echo "🛑 Stopping all mcpgoogle-* containers..."
+	@CONTAINERS=$$(docker ps --filter "name=mcpgoogle-" --format "{{.Names}}"); \
+	if [ -z "$$CONTAINERS" ]; then \
+		echo "No running containers found"; \
+	else \
+		echo "$$CONTAINERS" | xargs -r docker stop; \
+		echo "✅ All containers stopped!"; \
+	fi
+
+# Stop and remove all mcpgoogle-* containers
+rm-all:
+	@echo "🗑️  Stopping and removing all mcpgoogle-* containers..."
+	@CONTAINERS=$$(docker ps -a --filter "name=mcpgoogle-" --format "{{.Names}}"); \
+	if [ -z "$$CONTAINERS" ]; then \
+		echo "No containers found"; \
+	else \
+		echo "$$CONTAINERS" | xargs -r docker rm -f; \
+		echo "✅ All containers removed!"; \
+	fi
